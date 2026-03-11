@@ -1,3 +1,6 @@
+# manifest_fat.yml — Heavy manifest for pipeline stress testing
+# Uses real public repositories and the official Omeka catalog.
+
 apiVersion: "libnamic.omk/v1"
 kind: "OmekaSProject"
 
