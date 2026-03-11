@@ -1,0 +1,62 @@
+# sample_manifest.yml — Reference template with all source types
+# Copy this file as manifest.yml and replace <placeholders> with real values.
+
+apiVersion: "libnamic.omk/v1"
+kind: "OmekaSProject"
+
+project:
+  name: "<project-name>"
+  description: "<Short description of this Omeka S instance>"
+  image:
+    name: "registry.gitlab.com/<namespace>/<repo>/<image-name>"
+
+base:
+  image: "registry.gitlab.com/<namespace>/omeka-s-base"
+  tag: "<omeka-version>-<php-version>-<os>-<date>"  # e.g. 4.1.1-php8.2-bookworm-2026.02
+
+extensions:
+  modules:
+    # --- catalog: resolved from the official Omeka add-ons API ---
+    - name: "<ModuleName>"
+      source:
+        type: "catalog"
+        version: "<version>"          # e.g. "2.2.0"
+
+    # --- git: cloned and checked out at exact ref ---
+    - name: "<ModuleName>"
+      source:
+        type: "git"
+        repo: "https://github.com/omeka-s-modules/<repo>.git"
+        ref: "<tag-or-commit-sha>"    # e.g. "v2.6.2" or "b6c1f92"
+
+    # --- release_zip: downloaded from a GitHub/GitLab release ---
+    - name: "<ModuleName>"
+      source:
+        type: "release_zip"
+        repo: "https://github.com/omeka-s-modules/<repo>"
+        version: "<release-tag>"      # e.g. "v1.20.0"
+        asset: "<ZipFileName>.zip"    # e.g. "ValueSuggest-1.20.0.zip"
+
+    # --- omeka-s-cli: same catalog backend used by omeka-s-cli tool ---
+    - name: "<ModuleName>"
+      source:
+        type: "omeka-s-cli"
+        version: "<version>"          # e.g. "1.4.1"
+
+  themes:
+    - name: "<ThemeName>"
+      source:
+        type: "catalog"
+        version: "<version>"
+
+    - name: "<ThemeName>"
+      source:
+        type: "git"
+        repo: "https://github.com/omeka-s-themes/<repo>.git"
+        ref: "<tag-or-commit-sha>"
+
+build:
+  enable_tests: true
+  target_tags:
+    - "staging"
+    - "prod"
