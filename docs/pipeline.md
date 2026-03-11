@@ -1,6 +1,6 @@
 # CI/CD Pipeline
 
-The pipeline is defined in [`.gitlab-ci.yml`](../.gitlab-ci.yml) and runs automatically on every push. It has three stages: **prepare**, **build**, and **test**.
+The pipeline is defined in [`.gitlab-ci.yml`](../.gitlab-ci.yml) and runs automatically on every push. It has four stages: **prepare**, **build**, **test**, and **publish**.
 
 ```
 push to GitLab
@@ -22,17 +22,26 @@ push to GitLab
 │                 │  image: docker:27.5.1 + dind
 │  1. inspect     │
 │  2. docker build│
-│  3. docker push │
+│  3. docker save │
 └────────┬────────┘
-         │
+         │ artifacts:
+         │   paths: .ci/image.tar
          ▼
 ┌─────────────────┐
 │   smoke_test    │  stage: test
 │                 │  image: docker:27.5.1 + dind
-│  1. docker pull │
+│  1. docker load │
 │  2. php -v      │
 │  3. ls modules  │
 │  4. ls themes   │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  publish_image  │  stage: publish
+│                 │  image: docker:27.5.1 + dind
+│  1. docker load │
+│  2. docker push │
 └─────────────────┘
 ```
 
@@ -65,19 +74,33 @@ Uses Docker-in-Docker (dind) without TLS.
 
 1. `docker manifest inspect "$BASE_IMAGE:$BASE_TAG"` — verifies the base image exists before building.
 2. `docker build --pull` with the variables from the dotenv artifact.
-3. `docker push "$TARGET_IMAGE"` to the GitLab Container Registry.
+3. `docker save "$TARGET_IMAGE" -o .ci/image.tar` — exports the image as a tar artifact so downstream stages can use it without a registry.
+
+The image is **not pushed** in this stage. It is passed to the next stages via artifact.
 
 ---
 
 ## Stage 3 — `smoke_test`
 
-Pulls the image pushed by `build_image` and checks:
+Loads the image from the tar artifact and checks:
 
-1. `php -v` — PHP runtime works inside the image.
-2. For each module in `build-context/modules/*/`, runs `ls` inside the container to confirm it exists at `/var/www/html/modules/<name>`.
-3. Same for themes at `/var/www/html/themes/<name>`.
+1. `docker load -i .ci/image.tar` — loads the image locally.
+2. `php -v` — PHP runtime works inside the image.
+3. For each module in `build-context/modules/*/`, runs `ls` inside the container to confirm it exists at `/var/www/html/modules/<n>`.
+4. Same for themes at `/var/www/html/themes/<n>`.
 
-Module and theme names are resolved dynamically from the `build-context/` artifact.
+Module and theme names are resolved dynamically from the `build-context/` artifact. If any check fails, the pipeline stops and the image is never published.
+
+---
+
+## Stage 4 — `publish_image`
+
+Loads the image from the tar artifact and pushes it:
+
+1. `docker load -i .ci/image.tar`
+2. `docker push "$TARGET_IMAGE"` to the GitLab Container Registry.
+
+This stage only runs if `smoke_test` passed, so no untested image reaches the registry.
 
 ---
 

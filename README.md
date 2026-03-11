@@ -68,7 +68,7 @@ python tools/fetch.py
 # 3. Generate build variables → .ci/build.env
 python tools/write_build_env.py manifest.yml
 
-# 4. Build the image locally
+# 4. Build the image locally (optional)
 source .ci/build.env
 docker build \
   --file Dockerfile \

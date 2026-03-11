@@ -2,9 +2,8 @@ stages:
   - prepare
   - build
   - test
+  - publish
 
-# Validates the manifest, fetches all extensions, and computes build variables.
-# Passes build-context/ as a path artifact and build variables via dotenv.
 prepare_context:
   stage: prepare
   image: python:3.12-alpine
@@ -20,35 +19,23 @@ prepare_context:
     paths:
       - build-context/
     reports:
-      # Variables in this file are injected automatically into downstream jobs.
       dotenv: .ci/build.env
 
-# Builds the project image from the base and the fetched extensions, then pushes to the registry.
-# BASE_IMAGE, BASE_TAG, TARGET_IMAGE, BUILD_DATE, and VCS_REF come from the dotenv artifact.
 build_image:
   stage: build
   image: docker:27.5.1
   services:
-    # --tls=false runs the daemon without TLS, required when connecting over plain TCP.
     - name: docker:27.5.1-dind
       command: ["--tls=false"]
   variables:
-    # Port 2375 is the unencrypted Docker socket exposed by dind.
     DOCKER_HOST: tcp://docker:2375
-    # Must be empty to match --tls=false; otherwise the client tries to load certs.
     DOCKER_TLS_CERTDIR: ""
-    # overlay2 is the recommended storage driver for dind on Linux.
     DOCKER_DRIVER: overlay2
   needs:
     - job: prepare_context
-      # artifacts: true downloads build-context/ and makes the dotenv variables available.
       artifacts: true
-  before_script:
-    - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" --username "$CI_REGISTRY_USER" --password-stdin
   script:
-    # Verify the base image exists in the registry before attempting the build.
     - docker manifest inspect "$BASE_IMAGE:$BASE_TAG"
-    # --pull always fetches the latest version of the base image tag, avoiding stale cache.
     - >-
       docker build
       --pull
@@ -59,13 +46,14 @@ build_image:
       --build-arg BUILD_DATE="$BUILD_DATE"
       --build-arg VCS_REF="$VCS_REF"
       .
-    - docker push "$TARGET_IMAGE"
+    # Export the image as a tar so the next stage can load it without a registry
+    - mkdir -p .ci
+    - docker save "$TARGET_IMAGE" -o .ci/image.tar
+  artifacts:
+    expire_in: 1 day
+    paths:
+      - .ci/image.tar
 
-# Pulls the built image and runs basic smoke checks:
-# - PHP is functional (php -v)
-# - Declared modules were copied into the image
-# - Declared themes were copied into the image
-# Module/theme names are resolved dynamically from the build-context/ artifact.
 smoke_test:
   stage: test
   image: docker:27.5.1
@@ -77,29 +65,46 @@ smoke_test:
     DOCKER_TLS_CERTDIR: ""
     DOCKER_DRIVER: overlay2
   needs:
-    # Wait for the image to be pushed before pulling it.
     - job: build_image
-      artifacts: false
-    # Provides $TARGET_IMAGE (dotenv) and build-context/ (to resolve extension names).
+      artifacts: true
     - job: prepare_context
       artifacts: true
-  before_script:
-    - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" --username "$CI_REGISTRY_USER" --password-stdin
   script:
-    - docker pull "$TARGET_IMAGE"
-    # Confirm the PHP runtime works inside the image.
+    # Load the image from the artifact
+    - docker load -i .ci/image.tar
     - docker run --rm "$TARGET_IMAGE" php -v
-    # Confirm each declared module was copied to /var/www/html/modules/.
     - |
       for dir in build-context/modules/*/; do
         name=$(basename "$dir")
         echo "Checking module: $name"
         docker run --rm "$TARGET_IMAGE" ls "/var/www/html/modules/$name"
       done
-    # Confirm each declared theme was copied to /var/www/html/themes/.
     - |
       for dir in build-context/themes/*/; do
         name=$(basename "$dir")
         echo "Checking theme: $name"
         docker run --rm "$TARGET_IMAGE" ls "/var/www/html/themes/$name"
       done
+
+publish_image:
+  stage: publish
+  image: docker:27.5.1
+  services:
+    - name: docker:27.5.1-dind
+      command: ["--tls=false"]
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+    DOCKER_TLS_CERTDIR: ""
+    DOCKER_DRIVER: overlay2
+  needs:
+    - job: smoke_test
+      artifacts: false
+    - job: build_image
+      artifacts: true
+    - job: prepare_context
+      artifacts: true
+  before_script:
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" --username "$CI_REGISTRY_USER" --password-stdin
+  script:
+    - docker load -i .ci/image.tar
+    - docker push "$TARGET_IMAGE"
