@@ -5,7 +5,7 @@ project:
   name: "archivo-municipal-test"
   description: "Functional test manifest using real public repositories"
   image:
-    name: "registry.gitlab.com/practicas_libnamic/cicd_omekas_manifest/omeka-archivo-municipal-test"
+    name: "registry.gitlab.com/manusolmel/cicd_omekas_manifest/omeka-archivo-municipal-test"
 
 base:
   image: "giocomai/omeka-s-docker"
