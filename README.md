@@ -138,10 +138,9 @@ See `sample_manifest.yml` for a template with all source types.
 ```
 .
 ├── manifest.yml                  # Active manifest (read by the pipeline)
-├── test_manifest.yml             # Functional manifest with real public repos
 ├── sample_manifest.yml           # Reference template with placeholders
 ├── Dockerfile                    # Project image definition
-├── .gitlab-ci.yml                # Pipeline: prepare → build → test
+├── .gitlab-ci.yml                # Pipeline: prepare → build → test → publish
 │
 ├── tools/
 │   ├── validate_manifest.py      # CLI: validates manifest schema
@@ -149,9 +148,11 @@ See `sample_manifest.yml` for a template with all source types.
 │   ├── write_build_env.py        # CLI: writes build variables to .ci/build.env
 │   ├── manifest_rules.py         # Data: validation rules (no logic)
 │   └── utility.py                # Shared helpers for all tools
-│
+|
+├── manifest_test/                # Collection of YAML manifests for testing scenarios
+│   
+|
 └── docs/
-    ├── manifest.md               # Manifest schema and source types
     ├── pipeline.md               # CI/CD pipeline reference
     └── tools.md                  # CLI tools reference
 ```
