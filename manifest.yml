@@ -1,0 +1,51 @@
+apiVersion: "libnamic.omk/v1"
+kind: "OmekaSProject"
+
+project:
+  name: "archivo-municipal-test"
+  description: "Functional test manifest using real public repositories"
+  image:
+    name: "registry.gitlab.com/practicas_libnamic/project_cicd_omekas_manifests/omeka-archivo-municipal-test"
+
+base:
+  image: "giocomai/omeka-s-docker"
+  tag: "latest"
+
+extensions:
+  modules:
+    - name: "Mapping"
+      source:
+        type: "catalog"
+        version: "2.2.0"
+
+    - name: "CSVImport"
+      source:
+        type: "git"
+        repo: "https://github.com/omeka-s-modules/CSVImport.git"
+        ref: "v2.6.2"
+
+    - name: "ValueSuggest"
+      source:
+        type: "release_zip"
+        repo: "https://github.com/omeka-s-modules/ValueSuggest"
+        version: "v1.20.0"
+        asset: "ValueSuggest-1.20.0.zip"
+
+  themes:
+    - name: "Default"
+      source:
+        type: "catalog"
+        version: "1.9.2"
+
+    - name: "Freedom"
+      source:
+        type: "git"
+        repo: "https://github.com/omeka-s-themes/freedom.git"
+        ref: "v1.1.0"
+
+build:
+  # optional build configuration
+  enable_tests: true
+  target_tags:
+    - "staging"
+    - "prod"

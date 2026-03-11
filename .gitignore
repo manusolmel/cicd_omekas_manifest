@@ -1,0 +1,8 @@
+.env
+/tools/__pycache__/*
+.vscode/*
+
+
+# Generated build output
+/build-context/
+/.ci/build.env
