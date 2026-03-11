@@ -1,0 +1,36 @@
+apiVersion: "libnamic.omk/v1"
+kind: "OmekaSProject"
+
+project:
+  name: "test-git-only"
+  description: "Prueba con módulos y temas referenciados por commit exacto"
+  image:
+    name: "registry.gitlab.com/manusolmel/cicd_omekas_manifest/omeka-test-git"
+
+base:
+  image: "giocomai/omeka-s-docker"
+  tag: "latest"
+
+extensions:
+  modules:
+    - name: "CSVImport"
+      source:
+        type: "git"
+        repo: "https://github.com/omeka-s-modules/CSVImport.git"
+        ref: "v2.6.2"
+    - name: "ValueSuggest"
+      source:
+        type: "git"
+        repo: "https://github.com/omeka-s-modules/ValueSuggest.git"
+        ref: "v1.20.0"
+  themes:
+    - name: "freedom"
+      source:
+        type: "git"
+        repo: "https://github.com/omeka-s-themes/freedom.git"
+        ref: "v1.1.0"
+
+build:
+  enable_tests: true
+  target_tags:
+    - "staging"

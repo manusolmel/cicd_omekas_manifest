@@ -1,0 +1,46 @@
+apiVersion: "libnamic.omk/v1"
+kind: "OmekaSProject"
+
+project:
+  name: "test-mixed"
+  description: "Prueba combinando catalog, git y release_zip"
+  image:
+    name: "registry.gitlab.com/manusolmel/cicd_omekas_manifest/omeka-test-mixed"
+
+base:
+  image: "giocomai/omeka-s-docker"
+  tag: "latest"
+
+extensions:
+  modules:
+    - name: "Mapping"
+      source:
+        type: "catalog"
+        version: "2.2.0"
+    - name: "CSVImport"
+      source:
+        type: "git"
+        repo: "https://github.com/omeka-s-modules/CSVImport.git"
+        ref: "v2.6.2"
+    - name: "ValueSuggest"
+      source:
+        type: "release_zip"
+        repo: "https://github.com/omeka-s-modules/ValueSuggest"
+        version: "v1.20.0"
+        asset: "ValueSuggest-1.20.0.zip"
+  themes:
+    - name: "Default"
+      source:
+        type: "catalog"
+        version: "1.9.2"
+    - name: "freedom"
+      source:
+        type: "git"
+        repo: "https://github.com/omeka-s-themes/freedom.git"
+        ref: "v1.1.0"
+
+build:
+  enable_tests: true
+  target_tags:
+    - "staging"
+    - "prod"
