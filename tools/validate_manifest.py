@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import sys
+import os
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -61,6 +62,27 @@ def validate_exact_values(doc: Mapping[str, Any]) -> list[str]:
             continue  # required check will report this
         if value != expected:
             errors.append(f"Invalid value for {_path_str(path)}: expected '{expected}', got '{value}'")
+    return errors
+
+def validate_registry_namespace(doc: Mapping[str, Any]) -> list[str]:
+    # Only executed in CI. Verifies that the registry defined in the manifest matches
+    # the namespace of the project running the pipeline.
+    errors: list[str] = []
+
+    ci_namespace = os.environ.get("CI_PROJECT_NAMESPACE")
+    if not ci_namespace:
+        return errors
+    
+    exists, image_name = get_path(doc, ("project", "image", "name"))
+    if not exists or not isinstance(image_name, str):
+        return errors
+    
+    expected_prefix = f"registry.gitlab.com/{ci_namespace}/"
+    if not image_name.startswith(expected_prefix):
+        errors.append(
+            f"project.image.name apunta fuera del namespace '{ci_namespace}'. "
+            f"Debe empezar por '{expected_prefix}' o usar un Deploy Token explícito."
+        )
     return errors
 
 
@@ -213,6 +235,7 @@ def main(argv: list[str] | None = None) -> int:
     errors.extend(validate_list_items(doc))
     errors.extend(validate_list_element_types(doc))
     errors.extend(validate_source_types(doc))
+    errors.extend(validate_registry_namespace(doc))
 
     if errors:
         print("Manifest validation FAILED:", file=sys.stderr)

@@ -119,3 +119,14 @@ After a successful pipeline, the image is available at:
 ```
 registry.gitlab.com/<namespace>/<repo>/<image-name>:<tag>
 ```
+
+## Registry Restriction
+
+The variables `CI_REGISTRY_USER` and `CI_REGISTRY_PASSWORD` that GitLab automatically injects only have write permissions for the registry of the repository where the pipeline is running.
+
+Therefore, `project.image.name` in the manifest must point to the same namespace:
+
+`registry.gitlab.com/<your-namespace>/<repo>/<image>`
+
+If the image needs to be pushed to a different namespace than the project
+running the pipeline, a **Deploy Token** must be used.
