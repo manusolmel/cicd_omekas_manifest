@@ -1,6 +1,6 @@
 # CI/CD Pipeline for Omeka S
 
-[![pipeline status](https://gitlab.com/practicas_libnamic/project_cicd_omekas_manifests/badges/main/pipeline.svg)](https://gitlab.com/practicas_libnamic/project_cicd_omekas_manifests/-/pipelines)
+[![pipeline status](https://gitlab.com/manusolmel/cicd_omekas_manifest/badges/main/pipeline.svg)](https://gitlab.com/manusolmel/cicd_omekas_manifest/-/pipelines)
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![Docker](https://img.shields.io/badge/Docker-27.5-2496ED?style=flat-square&logo=docker&logoColor=white)](https://www.docker.com/)
 [![GitLab CI](https://img.shields.io/badge/GitLab-CI%2FCD-FC6D26?style=flat-square&logo=gitlab&logoColor=white)](https://docs.gitlab.com/ee/ci/)
