@@ -2,10 +2,10 @@ apiVersion: "libnamic.omk/v1"
 kind: "OmekaSProject"
 
 project:
-  name: "omeka-fat-test"
-  description: "Stress-test manifest with many modules and themes using all source types"
+  name: "omeka-k8s"
+  description: "Omeka S image for Kubernetes deployment"
   image:
-    name: "registry.gitlab.com/manusolmel/cicd_omekas_manifest/omeka-fat-test"
+    name: "registry.gitlab.com/manusolmel/cicd_omekas_manifest/omeka-k8s"
 
 base:
   image: "giocomai/omeka-s-docker"
@@ -13,63 +13,17 @@ base:
 
 extensions:
   modules:
-    # catalog sources 
     - name: "Mapping"
       source:
         type: "catalog"
         version: "2.2.0"
 
-    - name: "Sharing"
-      source:
-        type: "catalog"
-        version: "1.5.0"
-
-    - name: "CustomVocab"
-      source:
-        type: "catalog"
-        version: "2.1.0"
-
-    - name: "Collecting"
-      source:
-        type: "catalog"
-        version: "1.12.2"
-
-    - name: "ItemCarouselBlock"
-      source:
-        type: "catalog"
-        version: "1.4.1"
-
-    - name: "FileSideload"
-      source:
-        type: "catalog"
-        version: "1.7.1"
-
-    # git sources
     - name: "CSVImport"
       source:
         type: "git"
         repo: "https://github.com/omeka-s-modules/CSVImport.git"
         ref: "v2.6.2"
 
-    - name: "MetadataBrowse"
-      source:
-        type: "git"
-        repo: "https://github.com/omeka-s-modules/MetadataBrowse.git"
-        ref: "v1.6.1"
-
-    - name: "Scripto"
-      source:
-        type: "git"
-        repo: "https://github.com/omeka-s-modules/Scripto.git"
-        ref: "v1.5.0"
-
-    - name: "Hierarchy"
-      source:
-        type: "git"
-        repo: "https://github.com/omeka-s-modules/Hierarchy.git"
-        ref: "v1.2.2"
-
-    #  release_zip sources
     - name: "ValueSuggest"
       source:
         type: "release_zip"
@@ -77,56 +31,19 @@ extensions:
         version: "v1.20.0"
         asset: "ValueSuggest-1.20.0.zip"
 
-    - name: "CopyResources"
-      source:
-        type: "release_zip"
-        repo: "https://github.com/omeka-s-modules/CopyResources"
-        version: "v1.0.1"
-        asset: "CopyResources-1.0.1.zip"
-
-    # omeka-s-cli sources 
-    - name: "InverseProperties"
-      source:
-        type: "omeka-s-cli"
-        version: "1.1.1"
-
-    - name: "NumericDataTypes"
-      source:
-        type: "omeka-s-cli"
-        version: "1.14.2"
-
   themes:
-    # catalog 
-    - name: "default"
+    - name: "Default"
       source:
         type: "catalog"
         version: "1.9.2"
 
-    - name: "centerrow"
-      source:
-        type: "catalog"
-        version: "1.8.5"
-
-    - name: "cozy"
-      source:
-        type: "catalog"
-        version: "1.6.3"
-
-    # git 
     - name: "freedom"
       source:
         type: "git"
         repo: "https://github.com/omeka-s-themes/freedom.git"
         ref: "v1.1.0"
 
-    - name: "papers"
-      source:
-        type: "git"
-        repo: "https://github.com/omeka-s-themes/papers.git"
-        ref: "v1.4.5"
-
 build:
   enable_tests: true
   target_tags:
     - "staging"
-    - "prod"
