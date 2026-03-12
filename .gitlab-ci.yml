@@ -3,6 +3,7 @@ stages:
   - build
   - test
   - publish
+  - deploy
 
 prepare_context:
   stage: prepare
@@ -108,3 +109,29 @@ publish_image:
   script:
     - docker load -i .ci/image.tar
     - docker push "$TARGET_IMAGE"
+
+deploy_k8s:
+  stage: deploy
+  image: bitnami/kubectl:1.34
+  needs:
+    - job: publish_image
+      artifacts: false
+    - job: prepare_context
+      artifacts: true
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "feature/k8s-deploy"
+  script:
+    - echo "Deploying $TARGET_IMAGE to Kubernetes . . . "
+    - kubectl config set-cluster k8s-cluster
+        --server="$KUBE_API_URL"
+        --certificate-authority=/dev/null
+        --insecure-skip-tls-verify=true
+    - kubectl config set-credentials gitlab-deployer
+        --token="$KUBE_TOKEN"
+    - kubectl config set-context deploy
+        --cluster=k8s-cluster
+        --user=gitlab-deployer
+        --namespace=omeka
+    - kubectl config use-context deploy
+    - kubectl set image deployment/omeka omeka="$TARGET_IMAGE" -n omeka
+    - kubectl rollout status deployment/omeka -n omeka --timeout=120s
