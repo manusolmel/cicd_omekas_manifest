@@ -128,7 +128,6 @@ deploy_k8s:
     - echo "Deploying $TARGET_IMAGE to Kubernetes . . . "
     - kubectl config set-cluster k8s-cluster
         --server="$KUBE_API_URL"
-        --certificate-authority=/dev/null
         --insecure-skip-tls-verify=true
     - kubectl config set-credentials gitlab-deployer
         --token="$KUBE_TOKEN"
