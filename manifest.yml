@@ -23,12 +23,6 @@ extensions:
         type: "catalog"
         version: "1.5.0"
 
-    - name: "CSVImport"
-      source:
-        type: "git"
-        repo: "https://github.com/omeka-s-modules/CSVImport.git"
-        ref: "v2.6.2"
-
     - name: "ValueSuggest"
       source:
         type: "release_zip"
