@@ -17,6 +17,11 @@ extensions:
       source:
         type: "catalog"
         version: "2.2.0"
+   
+    - name: "Sharing"
+      source:
+        type: "catalog"
+        version: "1.5.0"
 
     - name: "CSVImport"
       source:
