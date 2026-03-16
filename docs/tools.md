@@ -22,7 +22,7 @@ python tools/validate_manifest.py manifest.yml
 
 ### What it checks
 
-The validator runs six passes and collects **all errors** before printing.
+The validator runs seven passes and collects **all errors** before printing.
 
 | Pass | What it checks |
 |---|---|
@@ -32,8 +32,9 @@ The validator runs six passes and collects **all errors** before printing.
 | List item structure | Each module/theme has `name`, `source`, and `source.type` |
 | List element types | Elements inside known lists have the correct type |
 | Source types | `source.type` is supported; required fields for that type are present |
+| Registry namespace (CI only) | In CI, `project.image.name` must match `CI_PROJECT_NAMESPACE` (or use an explicit Deploy Token) |
 
-Validation rules are declared as pure data in `manifest_rules.py`.
+Most validation rules are declared as pure data in `manifest_rules.py`.
 
 ---
 

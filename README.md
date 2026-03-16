@@ -22,13 +22,13 @@ manifest.yml
       │
       ▼
 ┌──────────────────────────────────────────────────┐
-│  prepare_context                  stage: prepare  │
-│                                                   │
-│  1. validate   tools/validate_manifest.py         │
-│  2. fetch      tools/fetch.py                     │
-│                └── build-context/{modules,themes} │
-│  3. write_env  tools/write_build_env.py           │
-│                └── .ci/build.env                  │
+│  prepare_context                  stage: prepare   │
+│                                                    │
+│  1. validate   tools/validate_manifest.py          │
+│  2. fetch      tools/fetch.py                      │
+│                └── build-context/{modules,themes}  │
+│  3. write_env  tools/write_build_env.py            │
+│                └── .ci/build.env                   │
 └───────────────────────┬──────────────────────────┘
                         │ artifacts: build-context/ + .ci/build.env
                         ▼
@@ -37,20 +37,38 @@ manifest.yml
 │                                                   │
 │  1. inspect    docker manifest inspect base:tag   │
 │  2. build      docker build --pull …              │
-│  3. push       docker push $TARGET_IMAGE          │
+│  3. save       docker save → .ci/image.tar        │
 └───────────────────────┬──────────────────────────┘
-                        │
+                        │ artifacts: .ci/image.tar
                         ▼
 ┌──────────────────────────────────────────────────┐
 │  smoke_test                          stage: test  │
 │                                                   │
-│  1. pull       docker pull $TARGET_IMAGE          │
+│  1. load       docker load -i .ci/image.tar       │
 │  2. php -v     confirms PHP runtime               │
 │  3. ls …       confirms each module/theme copied  │
+└───────────────────────┬──────────────────────────┘
+                        │
+                        ▼
+┌──────────────────────────────────────────────────┐
+│  publish_image                   stage: publish   │
+│                                                   │
+│  1. load       docker load -i .ci/image.tar       │
+│  2. push       docker push $TARGET_IMAGE          │
+└───────────────────────┬──────────────────────────┘
+                        │
+                        ▼
+┌──────────────────────────────────────────────────┐
+│  deploy_k8s                       stage: deploy   │
+│                                                   │
+│  1. config     build kubeconfig from CI variables │
+│  2. set image  kubectl set image deployment/omeka │
+│  3. wait       kubectl rollout status             │
 └──────────────────────────────────────────────────┘
 ```
 
 The pipeline runs automatically on every push via `.gitlab-ci.yml`.
+`deploy_k8s` runs on `main` and `feature/k8s-deploy`.
 
 ---
 
@@ -80,7 +98,7 @@ docker build \
   .
 ```
 
->Use `test_manifest.yml` for testing. It references public repositories.
+>Use manifests in `manifest_test/` for testing.
 
 ---
 
@@ -140,7 +158,7 @@ See `sample_manifest.yml` for a template with all source types.
 ├── manifest.yml                  # Active manifest (read by the pipeline)
 ├── sample_manifest.yml           # Reference template with placeholders
 ├── Dockerfile                    # Project image definition
-├── .gitlab-ci.yml                # Pipeline: prepare → build → test → publish
+├── .gitlab-ci.yml                # Pipeline: prepare → build → test → publish → deploy
 │
 ├── tools/
 │   ├── validate_manifest.py      # CLI: validates manifest schema
@@ -151,6 +169,15 @@ See `sample_manifest.yml` for a template with all source types.
 |
 ├── manifest_test/                # Collection of YAML manifests for testing scenarios
 │   
+├── k8s/                          # Kubernetes deployment manifests
+│   ├── 00-namespace.yml          # Namespace `omeka`
+│   ├── 01-mariadb-secret.yml     # MariaDB credentials Secret
+│   ├── 02-database-ini-configmap.yml  # Omeka database.ini ConfigMap
+│   ├── 03-mariadb.yml            # MariaDB PVC + Deployment + Service
+│   ├── 04-omeka.yml              # Omeka PVC + Deployment + Service
+│   ├── 05-ingress.yml            # Ingress for public access
+│   └── 06-gitlab-deployer-rbac.yml # ServiceAccount + RBAC for CI deploy job
+|
 |
 └── docs/
     ├── pipeline.md               # CI/CD pipeline reference

@@ -1,0 +1,88 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: omeka-files
+  namespace: omeka
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: local-path
+  resources:
+    requests:
+      storage: 5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: omeka
+  namespace: omeka
+  labels:
+    app: omeka
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: omeka
+  template:
+    metadata:
+      labels:
+        app: omeka
+    spec:
+      imagePullSecrets:
+        - name: gitlab-registry
+      initContainers:
+        - name: copy-db-ini
+          image: busybox:1.36
+          command: ["sh", "-c", "cp /src/database.ini /dest/database.ini"]
+          volumeMounts:
+            - name: database-ini-src
+              mountPath: /src
+            - name: database-ini
+              mountPath: /dest
+      containers:
+        - name: omeka
+          image: registry.gitlab.com/manusolmel/cicd_omekas_manifest/omeka-k8s:v1.0.1t
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: files
+              mountPath: /var/www/html/files
+            - name: database-ini
+              mountPath: /var/www/html/config/database.ini
+              subPath: database.ini
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+      volumes:
+        - name: files
+          persistentVolumeClaim:
+            claimName: omeka-files
+        - name: database-ini-src
+          configMap:
+            name: omeka-database-ini
+        - name: database-ini
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: omeka
+  namespace: omeka
+spec:
+  selector:
+    app: omeka
+  ports:
+    - port: 80
+      targetPort: 80
