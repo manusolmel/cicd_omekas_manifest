@@ -37,16 +37,24 @@ manifest.yml
 │                                                   │
 │  1. inspect    docker manifest inspect base:tag   │
 │  2. build      docker build --pull …              │
-│  3. push       docker push $TARGET_IMAGE          │
+│  3. save       docker save → .ci/image.tar        │
 └───────────────────────┬──────────────────────────┘
-                        │
+                        │ artifacts: .ci/image.tar
                         ▼
 ┌──────────────────────────────────────────────────┐
 │  smoke_test                          stage: test  │
 │                                                   │
-│  1. pull       docker pull $TARGET_IMAGE          │
+│  1. load       docker load -i .ci/image.tar       │
 │  2. php -v     confirms PHP runtime               │
 │  3. ls …       confirms each module/theme copied  │
+└───────────────────────┬──────────────────────────┘
+                        │
+                        ▼
+┌──────────────────────────────────────────────────┐
+│  publish_image                   stage: publish   │
+│                                                   │
+│  1. load       docker load -i .ci/image.tar       │
+│  2. push       docker push $TARGET_IMAGE          │
 └──────────────────────────────────────────────────┘
 ```
 
@@ -80,7 +88,7 @@ docker build \
   .
 ```
 
->Use `test_manifest.yml` for testing. It references public repositories.
+>Use manifests in `manifest_test/` for testing.
 
 ---
 
