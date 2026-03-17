@@ -122,8 +122,9 @@ deploy_k8s:
       artifacts: false
     - job: prepare_context
       artifacts: true
+  when: manual
   rules:
-    - if: $CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "feature/k8s-deploy"
+    - if: '$CI_COMMIT_BRANCH == "main"'
   script:
     - echo "Deploying $TARGET_IMAGE to Kubernetes . . . "
     - kubectl config set-cluster k8s-cluster
