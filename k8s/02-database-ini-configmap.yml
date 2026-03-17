@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: omeka-database-ini
+  namespace: omeka
+data:
+  database.ini: |
+    user     = "omeka"
+    password = "1234"
+    dbname   = "omeka_s"
+    host     = "mariadb"

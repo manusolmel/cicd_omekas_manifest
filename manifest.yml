@@ -17,12 +17,11 @@ extensions:
       source:
         type: "catalog"
         version: "2.2.0"
-
-    - name: "CSVImport"
+   
+    - name: "Sharing"
       source:
-        type: "git"
-        repo: "https://github.com/omeka-s-modules/CSVImport.git"
-        ref: "v2.6.2"
+        type: "catalog"
+        version: "1.5.0"
 
     - name: "ValueSuggest"
       source:
