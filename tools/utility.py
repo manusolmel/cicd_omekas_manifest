@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import subprocess
 import urllib.parse
 import urllib.request
@@ -84,16 +85,45 @@ def flatten_single_top_level_dir(dest: Path) -> None:
         root.rmdir()
 
 
-def download_and_extract_zip(url: str, dest: Path) -> None:
-    # Download a ZIP file, extract it into `dest`, normalize layout, and clean temp file.
+def calculate_file_sha256(path: Path, chunk_size: int = 1024 * 1024) -> str:
+    # Compute the SHA-256 checksum for a file by streaming chunks from disk.
+    digest = hashlib.sha256()
+    with path.open("rb") as fh:
+        for chunk in iter(lambda: fh.read(chunk_size), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def normalize_expected_sha256(expected_sha256: str) -> str:
+    # Accept either 'sha256:<hex>' or '<hex>' and normalize to lowercase hex only.
+    normalized = expected_sha256.strip().lower()
+    if normalized.startswith("sha256:"):
+        normalized = normalized[len("sha256:") :]
+    return normalized
+
+
+def download_and_extract_zip(url: str, dest: Path, expected_sha256: str | None = None) -> None:
+    # Download a ZIP file, verify checksum when provided, extract it, and always clean temp file.
     zip_path = dest / "download.zip"
-    urllib.request.urlretrieve(url, zip_path)
 
-    with zipfile.ZipFile(zip_path, "r") as zf:
-        zf.extractall(dest)
+    try:
+        urllib.request.urlretrieve(url, zip_path)
 
-    flatten_single_top_level_dir(dest)
-    zip_path.unlink(missing_ok=True)
+        if expected_sha256 is not None:
+            expected_normalized = normalize_expected_sha256(expected_sha256)
+            actual_sha256 = calculate_file_sha256(zip_path)
+            if actual_sha256 != expected_normalized:
+                raise RuntimeError(
+                    f"ZIP checksum mismatch for URL '{url}': "
+                    f"expected sha256 '{expected_normalized}', got '{actual_sha256}'"
+                )
+
+        with zipfile.ZipFile(zip_path, "r") as zf:
+            zf.extractall(dest)
+
+        flatten_single_top_level_dir(dest)
+    finally:
+        zip_path.unlink(missing_ok=True)
 
 
 def normalize_repo_url(repo: str) -> str:

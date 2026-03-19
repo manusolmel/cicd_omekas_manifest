@@ -22,16 +22,17 @@ python tools/validate_manifest.py manifest.yml
 
 ### What it checks
 
-The validator runs seven passes and collects **all errors** before printing.
+The validator runs eight passes and collects **all errors** before printing.
 
 | Pass | What it checks |
 |---|---|
-| Required fields | All required paths exist (e.g. `base.tag`, `project.image.name`) |
+| Required fields | All required paths exist (e.g. `base.tag`, `base.digest`, `project.image.name`) |
 | Exact values | `apiVersion` and `kind` match the spec |
 | Types | Field types are correct (e.g. `extensions.modules` is a list) |
 | List item structure | Each module/theme has `name`, `source`, and `source.type` |
 | List element types | Elements inside known lists have the correct type |
-| Source types | `source.type` is supported; required fields for that type are present |
+| Base digest format | `base.digest` matches `sha256:` + 64 hex chars |
+| Source types | `source.type` is supported; required fields and `source.sha256` format for ZIP-based sources are validated |
 | Registry namespace (CI only) | In CI, `project.image.name` must match `CI_PROJECT_NAMESPACE` (or use an explicit Deploy Token) |
 
 Most validation rules are declared as pure data in `manifest_rules.py`.
@@ -47,6 +48,8 @@ python tools/fetch.py
 ```
 
 No arguments. Always reads `manifest.yml` from the current directory.
+
+For `catalog`, `release_zip` and `omeka-s-cli` sources, downloaded ZIPs are SHA-256 verified against `source.sha256` before extraction.
 
 ### Output layout
 
@@ -78,7 +81,7 @@ Reads image coordinates from the manifest and CI environment variables, then wri
 python tools/write_build_env.py manifest.yml
 ```
 
-Writes `.ci/build.env`. See [pipeline.md](pipeline.md#image-tagging) for the variables and tagging logic.
+Writes `.ci/build.env` with `BASE_IMAGE`, `BASE_TAG`, `BASE_DIGEST`, `TARGET_IMAGE`, `BUILD_DATE`, `VCS_REF`. See [pipeline.md](pipeline.md#image-tagging) for tagging logic.
 
 ### Exit codes
 
