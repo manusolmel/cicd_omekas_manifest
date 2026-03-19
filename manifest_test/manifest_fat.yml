@@ -9,7 +9,8 @@ project:
 
 base:
   image: "giocomai/omeka-s-docker"
-  tag: "latest"
+  tag: "v4.2.0"
+  digest: "sha256:89169955b6090d8357d576072f34b239e533d50bf711094fb9b718a713b08741"
 
 extensions:
   modules:
@@ -18,31 +19,37 @@ extensions:
       source:
         type: "catalog"
         version: "2.2.0"
+        sha256: "36c27fc79207517364c6d4f88d28facc3c1b672fdb5ed5ddf046fa951c156a3b"
 
     - name: "Sharing"
       source:
         type: "catalog"
         version: "1.5.0"
+        sha256: "e097b7b95fbc3bd7e6ffce595c2582f7aa2b2a3b16bcd20966b27f6b6fa44979"
 
     - name: "CustomVocab"
       source:
         type: "catalog"
         version: "2.1.0"
+        sha256: "b365b46ad1e20718bbacebe6884f5e03e93e39a5fdc5eb0bb428570ec0fbec9b"
 
     - name: "Collecting"
       source:
         type: "catalog"
         version: "1.12.2"
+        sha256: "b3aadbebe55752e5bf5234da6de736768e2986303f9989f38334cea766788c60"
 
     - name: "ItemCarouselBlock"
       source:
         type: "catalog"
         version: "1.4.1"
+        sha256: "01ca16c9f20f891f94803193e1d576c647a752613fa726f739a411555a49ff62"
 
     - name: "FileSideload"
       source:
         type: "catalog"
         version: "1.7.1"
+        sha256: "330429d864e43ffb39fdf0e954e771e4770339a2ca12722acc24a6b587d1d455"
 
     # git sources
     - name: "CSVImport"
@@ -76,6 +83,7 @@ extensions:
         repo: "https://github.com/omeka-s-modules/ValueSuggest"
         version: "v1.20.0"
         asset: "ValueSuggest-1.20.0.zip"
+        sha256: "a948f2fa36d630cc4f19987685557b03b57b36ffd9a19b3aba01846431f7a558"
 
     - name: "CopyResources"
       source:
@@ -83,17 +91,20 @@ extensions:
         repo: "https://github.com/omeka-s-modules/CopyResources"
         version: "v1.0.1"
         asset: "CopyResources-1.0.1.zip"
+        sha256: "4fca2bbebb2846f38936ada75e4527789d703b3495d2e393f561d60c15dfd9cf"
 
     # omeka-s-cli sources 
     - name: "InverseProperties"
       source:
         type: "omeka-s-cli"
         version: "1.1.1"
+        sha256: "6600eaf559f8fd9976dcd3ce0fe0654d3a7cc3ceacc7bb69e87a25c93c75441a"
 
     - name: "NumericDataTypes"
       source:
         type: "omeka-s-cli"
         version: "1.14.2"
+        sha256: "990af9590070c2a01dfe3ea12a5c33a051f161c850d28df44563a0d67851524f"
 
   themes:
     # catalog 
@@ -101,16 +112,19 @@ extensions:
       source:
         type: "catalog"
         version: "1.9.2"
+        sha256: "f1cf865576bfb9b2d1a0a65e13a278d57c4626fcc4cd9ce96908ec33675a25f6"
 
     - name: "centerrow"
       source:
         type: "catalog"
         version: "1.8.5"
+        sha256: "e9d6e4f1cf38510c475d475caa0a9b4bfa686d93ef43805edef82246a9896b49"
 
     - name: "cozy"
       source:
         type: "catalog"
         version: "1.6.3"
+        sha256: "a3fb9a67beacace8044b0963e8e58fde95ec74e79dae71f7aa01900c7b74a0fa"
 
     # git 
     - name: "freedom"

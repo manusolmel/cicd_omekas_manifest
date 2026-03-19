@@ -9,7 +9,8 @@ project:
 
 base:
   image: "giocomai/omeka-s-docker"
-  tag: "latest"
+  tag: "v4.2.0"
+  digest: "sha256:89169955b6090d8357d576072f34b239e533d50bf711094fb9b718a713b08741"
 
 extensions:
   modules:
@@ -17,15 +18,18 @@ extensions:
       source:
         type: "catalog"
         version: "2.2.0"
+        sha256: "36c27fc79207517364c6d4f88d28facc3c1b672fdb5ed5ddf046fa951c156a3b"
     - name: "CSVImport"
       source:
         type: "catalog"
         version: "2.6.1"
+        sha256: "95aa91802ef497f6fb33e7bf1d129b041dc11ce1dc2eca4a6790a29becd592ad"
   themes:
     - name: "Default"
       source:
         type: "catalog"
         version: "1.9.2"
+        sha256: "f1cf865576bfb9b2d1a0a65e13a278d57c4626fcc4cd9ce96908ec33675a25f6"
 
 build:
   enable_tests: true

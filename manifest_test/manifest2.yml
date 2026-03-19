@@ -9,7 +9,8 @@ project:
 
 base:
   image: "giocomai/omeka-s-docker"
-  tag: "latest"
+  tag: "v4.2.0"
+  digest: "sha256:89169955b6090d8357d576072f34b239e533d50bf711094fb9b718a713b08741"
 
 extensions:
   modules:

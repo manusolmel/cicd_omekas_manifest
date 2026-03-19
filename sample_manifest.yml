@@ -13,6 +13,7 @@ project:
 base:
   image: "registry.gitlab.com/<namespace>/omeka-s-base"
   tag: "<omeka-version>-<php-version>-<os>-<date>"  # e.g. 4.1.1-php8.2-bookworm-2026.02
+  digest: "sha256:<image-manifest-digest>"       # immutable image digest for reproducible builds
 
 extensions:
   modules:
@@ -21,6 +22,7 @@ extensions:
       source:
         type: "catalog"
         version: "<version>"          # e.g. "2.2.0"
+        sha256: "<zip-sha256>"          # SHA-256 of resolved ZIP
 
     # --- git: cloned and checked out at exact ref ---
     - name: "<ModuleName>"
@@ -36,18 +38,21 @@ extensions:
         repo: "https://github.com/omeka-s-modules/<repo>"
         version: "<release-tag>"      # e.g. "v1.20.0"
         asset: "<ZipFileName>.zip"    # e.g. "ValueSuggest-1.20.0.zip"
+        sha256: "<zip-sha256>"          # SHA-256 of downloaded release asset
 
     # --- omeka-s-cli: same catalog backend used by omeka-s-cli tool ---
     - name: "<ModuleName>"
       source:
         type: "omeka-s-cli"
         version: "<version>"          # e.g. "1.4.1"
+        sha256: "<zip-sha256>"          # SHA-256 of resolved ZIP
 
   themes:
     - name: "<ThemeName>"
       source:
         type: "catalog"
         version: "<version>"
+        sha256: "<zip-sha256>"
 
     - name: "<ThemeName>"
       source:

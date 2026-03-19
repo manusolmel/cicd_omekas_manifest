@@ -40,14 +40,34 @@ build_image:
     - job: prepare_context
       artifacts: true
   script:
-    - docker manifest inspect "$BASE_IMAGE:$BASE_TAG"
+    - |
+      TAG_DIGEST=$(docker manifest inspect --verbose "$BASE_IMAGE:$BASE_TAG" \
+        | awk '
+            /"Descriptor": \{/ { in_desc=1; next }
+            in_desc && /"digest":/ {
+              gsub(/[",]/, "", $2)
+              print $2
+              exit
+            }
+          ')
+      if [ -z "$TAG_DIGEST" ]; then
+        echo "ERROR: could not resolve digest for $BASE_IMAGE:$BASE_TAG"
+        exit 1
+      fi
+      if [ "$TAG_DIGEST" != "$BASE_DIGEST" ]; then
+        echo "ERROR: manifest base.tag/base.digest mismatch"
+        echo "  tag digest:    $TAG_DIGEST"
+        echo "  manifest value:$BASE_DIGEST"
+        exit 1
+      fi
+    - docker manifest inspect "$BASE_IMAGE@$BASE_DIGEST"
     - >-
       docker build
       --pull
       --file Dockerfile
       --tag "$TARGET_IMAGE"
       --build-arg BASE_IMAGE="$BASE_IMAGE"
-      --build-arg BASE_TAG="$BASE_TAG"
+      --build-arg BASE_DIGEST="$BASE_DIGEST"
       --build-arg BUILD_DATE="$BUILD_DATE"
       --build-arg VCS_REF="$VCS_REF"
       .
