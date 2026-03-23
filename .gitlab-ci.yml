@@ -1,6 +1,6 @@
-default:
-  tags:
-    - k8s
+# default:
+#   tags:
+#     - k8s
 
 stages:
   - prepare
@@ -36,6 +36,7 @@ build_image:
     DOCKER_HOST: tcp://docker:2375
     DOCKER_TLS_CERTDIR: ""
     DOCKER_DRIVER: overlay2
+    DOCKER_BUILDKIT: 1
   needs:
     - job: prepare_context
       artifacts: true
@@ -61,11 +62,15 @@ build_image:
         exit 1
       fi
     - docker manifest inspect "$BASE_IMAGE@$BASE_DIGEST"
+    # Log in to the registry during the build stage to pull the stored cache
+    - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" --username "$CI_REGISTRY_USER" --password-stdin
     - >-
       docker build
       --pull
       --file Dockerfile
       --tag "$TARGET_IMAGE"
+      --cache-from "$CI_REGISTRY_IMAGE/cache:latest"
+      --build-arg BUILDKIT_INLINE_CACHE=1
       --build-arg BASE_IMAGE="$BASE_IMAGE"
       --build-arg BASE_DIGEST="$BASE_DIGEST"
       --build-arg BUILD_DATE="$BUILD_DATE"
@@ -133,6 +138,9 @@ publish_image:
   script:
     - docker load -i .ci/image.tar
     - docker push "$TARGET_IMAGE"
+    # Tag and push the image as a cache to speed up future pipelines
+    - docker tag "$TARGET_IMAGE" "$CI_REGISTRY_IMAGE/cache:latest"
+    - docker push "$CI_REGISTRY_IMAGE/cache:latest"
 
 deploy_k8s:
   stage: deploy
