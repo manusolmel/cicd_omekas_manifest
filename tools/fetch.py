@@ -26,11 +26,12 @@ def fetch_git_source(src: Mapping[str, Any], name: str, dest: Path) -> None:
     run(["git", "-C", str(dest), "checkout", "--force", src["ref"]])
 
 
-def fetch_release_zip_source(src: Mapping[str, Any], name: str, dest: Path) -> None:
+def fetch_release_zip_source(src: Mapping[str, Any], group: str, name: str, dest: Path) -> None:
     # release_zip follows manifest_rules: repo + version + asset.
+    sha256 = _require_sha256(src, group, name, "release_zip")
     url = resolve_release_zip_url(src, name)
     print("URL:", url)
-    download_and_extract_zip(url, dest)
+    download_and_extract_zip(url, dest, expected_sha256=sha256)
 
 
 def _require_version(src: Mapping[str, Any], group: str, name: str, source_type: str) -> str:
@@ -41,20 +42,30 @@ def _require_version(src: Mapping[str, Any], group: str, name: str, source_type:
     return version
 
 
+def _require_sha256(src: Mapping[str, Any], group: str, name: str, source_type: str) -> str:
+    # return a non-empty sha256 string or raise a readable runtime error.
+    sha256 = src.get("sha256")
+    if not isinstance(sha256, str) or not sha256.strip():
+        raise RuntimeError(f"{group}.{name}: source.type='{source_type}' requires a non-empty source.sha256")
+    return sha256
+
+
 def fetch_catalog_source(src: Mapping[str, Any], group: str, name: str, dest: Path) -> None:
     # catalog is resolved against the official Omeka add-ons API and pinned by version.
     version = _require_version(src, group, name, "catalog")
+    sha256 = _require_sha256(src, group, name, "catalog")
     url = resolve_catalog_zip_url(group, name, version)
     print("URL:", url)
-    download_and_extract_zip(url, dest)
+    download_and_extract_zip(url, dest, expected_sha256=sha256)
 
 
 def fetch_omeka_s_cli_source(src: Mapping[str, Any], group: str, name: str, dest: Path) -> None:
     # omeka-s-cli mode uses the same official catalog backend used by the CLI.
     version = _require_version(src, group, name, "omeka-s-cli")
+    sha256 = _require_sha256(src, group, name, "omeka-s-cli")
     url = resolve_omeka_s_cli_zip_url(group, name, version)
     print("URL:", url)
-    download_and_extract_zip(url, dest)
+    download_and_extract_zip(url, dest, expected_sha256=sha256)
 
 
 def process_extensions(items: list[dict[str, Any]], group: str, label: str) -> None:
@@ -76,7 +87,7 @@ def process_extensions(items: list[dict[str, Any]], group: str, label: str) -> N
         elif typ == "release_zip":
             # zip flows reuse a clean directory where files are extracted.
             ensure_clean_dir(dest)
-            fetch_release_zip_source(src, name, dest)
+            fetch_release_zip_source(src, group, name, dest)
 
         elif typ == "catalog":
             ensure_clean_dir(dest)

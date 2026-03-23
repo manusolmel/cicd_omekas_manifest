@@ -9,7 +9,7 @@
 
 Reproducible CI/CD pipeline that builds **Omeka S** container images from declarative YAML manifests.
 
-Given a `manifest.yml`, the pipeline validates it, fetches all declared modules and themes, builds a Docker image on top of a configurable base, runs smoke tests, and pushes to the GitLab Container Registry, automated on every push.
+Given a `manifest.yml`, the pipeline validates it, fetches all declared modules and themes, builds a Docker image on top of a configurable base, runs smoke tests, and pushes to the GitLab Container Registry on every push.
 
 > Full implementation specification: [`spec.md`](spec.md)
 
@@ -35,7 +35,7 @@ manifest.yml
 ┌──────────────────────────────────────────────────┐
 │  build_image                        stage: build  │
 │                                                   │
-│  1. inspect    docker manifest inspect base:tag   │
+│  1. inspect    verify base:tag resolves to digest  │
 │  2. build      docker build --pull …              │
 │  3. save       docker save → .ci/image.tar        │
 └───────────────────────┬──────────────────────────┘
@@ -68,7 +68,7 @@ manifest.yml
 ```
 
 The pipeline runs automatically on every push via `.gitlab-ci.yml`.
-`deploy_k8s` runs on `main` and `feature/k8s-deploy`.
+`deploy_k8s` is manual and only available on `main`.
 
 ---
 
@@ -92,7 +92,7 @@ docker build \
   --file Dockerfile \
   --tag "$TARGET_IMAGE" \
   --build-arg BASE_IMAGE="$BASE_IMAGE" \
-  --build-arg BASE_TAG="$BASE_TAG" \
+  --build-arg BASE_DIGEST="$BASE_DIGEST" \
   --build-arg BUILD_DATE="$BUILD_DATE" \
   --build-arg VCS_REF="$VCS_REF" \
   .
@@ -119,6 +119,7 @@ project:
 base:
   image: "registry.gitlab.com/<namespace>/omeka-s-base"
   tag: "4.1.1-php8.2-bookworm-2026.02"
+  digest: "sha256:<image-manifest-digest>"
 
 extensions:
   modules:
@@ -126,6 +127,7 @@ extensions:
       source:
         type: "catalog"
         version: "2.2.0"
+        sha256: "<zip-sha256>"
     - name: "CSVImport"
       source:
         type: "git"
@@ -136,16 +138,17 @@ extensions:
       source:
         type: "catalog"
         version: "1.9.2"
+        sha256: "<zip-sha256>"
 ```
 
 Each extension declares a `source.type` that tells the pipeline how to fetch it:
 
 | Source type | Required fields | How it works |
 |---|---|---|
-| `catalog` | `version` | Resolves the download URL from the [official Omeka add-ons API](https://omeka.org/add-ons/) |
+| `catalog` | `version`, `sha256` | Resolves the download URL from the [official Omeka add-ons API](https://omeka.org/add-ons/) |
 | `git` | `repo`, `ref` | Clones the repo and checks out the exact ref (tag or commit SHA) |
-| `release_zip` | `repo`, `version`, `asset` | Downloads a ZIP asset from a GitHub/GitLab release page |
-| `omeka-s-cli` | `version` | Same as `catalog` — uses the same official API backend |
+| `release_zip` | `repo`, `version`, `asset`, `sha256` | Downloads a ZIP asset from a GitHub/GitLab release page |
+| `omeka-s-cli` | `version`, `sha256` | Same as `catalog` — uses the same official API backend |
 
 See `sample_manifest.yml` for a template with all source types.
 

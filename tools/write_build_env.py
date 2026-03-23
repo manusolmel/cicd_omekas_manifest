@@ -5,6 +5,7 @@
 # Variables:
 #   BASE_IMAGE    base image name (manifest base.image)
 #   BASE_TAG      base image tag  (manifest base.tag)
+#   BASE_DIGEST   base image digest (manifest base.digest)
 #   TARGET_IMAGE  full target image ref  (<project.image.name>:<tag>)
 #   BUILD_DATE    ISO 8601 UTC build timestamp
 #   VCS_REF       full commit SHA (CI_COMMIT_SHA or 'unknown')
@@ -52,6 +53,7 @@ def main(argv: list[str] | None = None) -> int:
 
     base_image = _require_str(doc, ("base", "image"))
     base_tag = _require_str(doc, ("base", "tag"))
+    base_digest = _require_str(doc, ("base", "digest"))
     project_image = _require_str(doc, ("project", "image", "name"))
 
     # Tag priority: release tag > short SHA > 'dev' 
@@ -70,6 +72,7 @@ def main(argv: list[str] | None = None) -> int:
     lines = [
         f"BASE_IMAGE={base_image}",
         f"BASE_TAG={base_tag}",
+        f"BASE_DIGEST={base_digest}",
         f"TARGET_IMAGE={target_image}",
         f"BUILD_DATE={build_date}",
         f"VCS_REF={vcs_ref}",

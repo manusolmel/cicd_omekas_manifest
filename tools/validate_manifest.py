@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import sys
 import os
+import re
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -41,6 +42,19 @@ def get_path(doc: Mapping[str, Any], keys: Sequence[str]) -> tuple[bool, Any]:
 def _path_str(path: Sequence[str]) -> str:
     # Render a tuple path like ('project','image','name') as 'project.image.name'.
     return utility_path_str(path)
+
+
+def _is_valid_sha256(value: str) -> bool:
+    # Accept either 64 hex chars or 'sha256:' + 64 hex chars.
+    raw = value.strip()
+    if raw.lower().startswith("sha256:"):
+        raw = raw[7:]
+    return bool(re.fullmatch(r"[0-9a-fA-F]{64}", raw))
+
+
+def _is_valid_base_digest(value: str) -> bool:
+    # Base image digest must be canonical OCI format: sha256:<64 lowercase/uppercase hex chars>.
+    return bool(re.fullmatch(r"sha256:[0-9a-fA-F]{64}", value.strip()))
 
 
 def validate_required(doc: Mapping[str, Any]) -> list[str]:
@@ -152,6 +166,18 @@ def validate_list_element_types(doc: Mapping[str, Any]) -> list[str]:
     return errors
 
 
+def validate_base_digest(doc: Mapping[str, Any]) -> list[str]:
+    # Validate strict format for base.digest.
+    errors: list[str] = []
+    exists, digest = get_path(doc, ("base", "digest"))
+    if not exists or not isinstance(digest, str):
+        return errors
+
+    if not _is_valid_base_digest(digest):
+        errors.append("Invalid format for base.digest: expected 'sha256:' followed by 64 hex chars")
+    return errors
+
+
 def validate_source_types(doc: Mapping[str, Any]) -> list[str]:
     
     # Validate extensions[*].source:
@@ -207,6 +233,14 @@ def validate_source_types(doc: Mapping[str, Any]) -> list[str]:
                         f"expected {expected_type.__name__}, got {type(value).__name__}"
                     )
 
+            if source_type in {"release_zip", "catalog", "omeka-s-cli"}:
+                ok_sha, sha_value = get_path(source, ("sha256",))
+                if ok_sha and isinstance(sha_value, str) and not _is_valid_sha256(sha_value):
+                    errors.append(
+                        f"Invalid format for {prefix}[{i}].source.sha256: "
+                        f"expected 64 hex chars (optionally prefixed with 'sha256:')"
+                    )
+
     return errors
 
 
@@ -234,6 +268,7 @@ def main(argv: list[str] | None = None) -> int:
     errors.extend(validate_types(doc))
     errors.extend(validate_list_items(doc))
     errors.extend(validate_list_element_types(doc))
+    errors.extend(validate_base_digest(doc))
     errors.extend(validate_source_types(doc))
     errors.extend(validate_registry_namespace(doc))
 

@@ -18,6 +18,7 @@ REQUIRED_PATHS = [
     ("base",),
     ("base", "image"),
     ("base", "tag"),
+    ("base", "digest"),
     
     ("extensions",),
     ("extensions", "modules"),
@@ -56,6 +57,7 @@ EXPECTED_TYPES = {
     ("base",): dict,
     ("base", "image"): str,
     ("base", "tag"): str,
+    ("base", "digest"): str,
     ("extensions",): dict,
     ("extensions", "modules"): list,
     ("extensions", "themes"): list,
@@ -83,12 +85,15 @@ SOURCE_TYPE_REQUIRED = {
         ("repo",),
         ("version",),
         ("asset",),
+        ("sha256",),
     ],
     "catalog": [
         ("version",),
+        ("sha256",),
     ],
     "omeka-s-cli": [
         ("version",),
+        ("sha256",),
     ],
 }
 
@@ -102,12 +107,15 @@ SOURCE_TYPE_REQUIRED_TYPES = {
         ("repo",): str,
         ("version",): str,
         ("asset",): str,
+        ("sha256",): str,
     },
     "catalog": {
         ("version",): str,
+        ("sha256",): str,
     },
     "omeka-s-cli": {
         ("version",): str,
+        ("sha256",): str,
     },
 }
 

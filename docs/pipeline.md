@@ -78,7 +78,7 @@ python tools/write_build_env.py manifest.yml
 | Artifact | Type | Contents |
 |---|---|---|
 | `build-context/` | path | Downloaded modules and themes |
-| `.ci/build.env` | dotenv | `BASE_IMAGE`, `BASE_TAG`, `TARGET_IMAGE`, `BUILD_DATE`, `VCS_REF` |
+| `.ci/build.env` | dotenv | `BASE_IMAGE`, `BASE_TAG`, `BASE_DIGEST`, `TARGET_IMAGE`, `BUILD_DATE`, `VCS_REF` |
 
 `.ci/build.env` is declared as a `dotenv` artifact, so its variables are available in downstream jobs automatically.
 
@@ -88,9 +88,10 @@ python tools/write_build_env.py manifest.yml
 
 Uses Docker-in-Docker (dind) without TLS.
 
-1. `docker manifest inspect "$BASE_IMAGE:$BASE_TAG"` — verifies the base image exists before building.
-2. `docker build --pull` with the variables from the dotenv artifact.
-3. `docker save "$TARGET_IMAGE" -o .ci/image.tar` — exports the image as a tar artifact so downstream stages can use it without a registry.
+1. Resolves the digest of `"$BASE_IMAGE:$BASE_TAG"` and verifies it matches `BASE_DIGEST`.
+2. `docker manifest inspect "$BASE_IMAGE@$BASE_DIGEST"` — verifies the pinned base image reference exists.
+3. `docker build --pull` with the variables from the dotenv artifact (including `BASE_DIGEST`).
+4. `docker save "$TARGET_IMAGE" -o .ci/image.tar` — exports the image as a tar artifact so downstream stages can use it without a registry.
 
 The image is **not pushed** in this stage. It is passed to the next stages via artifact.
 
@@ -121,7 +122,7 @@ This stage only runs if `smoke_test` passed, so no untested image reaches the re
 ---
 ## Stage 5 — `deploy_k8s` 
 
-Updates the kubernetes Deployment with the newly published image. Only runs on `main` and `feature/k8s-deploy` 
+Updates the kubernetes Deployment with the newly published image. This job is manual and only runs on `main`.
 
 ### Kubernetes manifests in this repo
 
