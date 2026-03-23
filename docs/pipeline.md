@@ -7,7 +7,7 @@ push to GitLab
       │
       ▼
 ┌─────────────────┐
-│  prepare_context │  stage: prepare
+│  prepare_context│  stage: prepare
 │                 │  image: python:3.12-alpine
 │  1. validate    │
 │  2. fetch       │
